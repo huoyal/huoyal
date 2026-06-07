@@ -1,0 +1,579 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>huoyal Music Player</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --text: #273043;
+      --muted: #667085;
+      --line: #e9edf5;
+      --pink: #ff7cad;
+      --blue: #54c6eb;
+      --green: #78d878;
+      --yellow: #ffd36e;
+      --paper: rgba(255, 255, 255, 0.86);
+      --shadow: 0 24px 70px rgba(73, 80, 107, 0.18);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      color: var(--text);
+      font-family: Inter, "Segoe UI", "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+      background:
+        linear-gradient(135deg, rgba(255, 244, 170, 0.7), rgba(255, 214, 232, 0.72) 38%, rgba(203, 247, 255, 0.74) 72%, rgba(218, 248, 196, 0.72)),
+        repeating-linear-gradient(45deg, rgba(255,255,255,.34) 0 12px, rgba(255,255,255,.14) 12px 24px);
+    }
+
+    .shell {
+      width: min(1080px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 34px 0 44px;
+    }
+
+    .top {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.9fr);
+      gap: 24px;
+      align-items: center;
+      min-height: 210px;
+    }
+
+    .intro,
+    .player,
+    .track-list {
+      border: 1px solid rgba(255,255,255,.72);
+      background: var(--paper);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
+    }
+
+    .intro {
+      min-height: 210px;
+      padding: 30px;
+      border-radius: 28px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .intro::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 8px;
+      background: linear-gradient(90deg, var(--pink), var(--blue), var(--green), var(--yellow));
+      background-size: 240% 100%;
+      animation: slide 8s linear infinite;
+    }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 42px;
+      line-height: 1.1;
+      letter-spacing: 0;
+    }
+
+    .intro p {
+      max-width: 590px;
+      margin: 16px 0 0;
+      color: var(--muted);
+      font-size: 17px;
+      line-height: 1.7;
+    }
+
+    .cover {
+      width: 100%;
+      max-width: 420px;
+      justify-self: center;
+      filter: drop-shadow(0 22px 34px rgba(70, 84, 112, 0.14));
+    }
+
+    .player {
+      margin-top: 24px;
+      padding: 26px;
+      border-radius: 30px;
+      display: grid;
+      grid-template-columns: 210px minmax(0, 1fr);
+      gap: 26px;
+      align-items: center;
+    }
+
+    .disc-wrap {
+      display: grid;
+      place-items: center;
+      min-height: 210px;
+      border-radius: 26px;
+      background: linear-gradient(145deg, rgba(255,255,255,.78), rgba(255,255,255,.42));
+      border: 1px solid rgba(255,255,255,.78);
+    }
+
+    .disc {
+      width: 154px;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at center, #fff 0 12px, #536074 13px 18px, transparent 19px),
+        conic-gradient(from 0deg, var(--pink), var(--blue), var(--green), var(--yellow), var(--pink));
+      box-shadow: inset 0 0 0 26px rgba(255,255,255,.22), 0 22px 48px rgba(94, 109, 135, .2);
+      animation: spin 8s linear infinite;
+      animation-play-state: paused;
+    }
+
+    .is-playing .disc {
+      animation-play-state: running;
+    }
+
+    .meta {
+      min-width: 0;
+    }
+
+    .now {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .badge {
+      flex: 0 0 auto;
+      padding: 8px 12px;
+      border-radius: 999px;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 800;
+      background: linear-gradient(90deg, var(--pink), var(--blue));
+    }
+
+    .track-title {
+      margin: 0;
+      overflow-wrap: anywhere;
+      font-size: 29px;
+      line-height: 1.25;
+      letter-spacing: 0;
+    }
+
+    .track-subtitle {
+      margin: 8px 0 22px;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .progress {
+      display: grid;
+      grid-template-columns: 48px minmax(0, 1fr) 48px;
+      gap: 12px;
+      align-items: center;
+      color: var(--muted);
+      font-size: 13px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--pink);
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 22px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      border: 0;
+      color: var(--text);
+      background: #fff;
+      box-shadow: 0 12px 26px rgba(87, 96, 122, 0.14);
+      cursor: pointer;
+      transition: transform .18s ease, box-shadow .18s ease;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 16px 30px rgba(87, 96, 122, 0.18);
+    }
+
+    .icon-btn {
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    .play-btn {
+      width: 60px;
+      height: 60px;
+      color: #fff;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-size: 24px;
+      background: linear-gradient(135deg, var(--pink), var(--blue));
+    }
+
+    .volume {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 160px;
+      margin-left: auto;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .equalizer {
+      display: flex;
+      align-items: end;
+      gap: 5px;
+      height: 34px;
+      margin-left: 4px;
+    }
+
+    .equalizer span {
+      width: 7px;
+      height: 16px;
+      border-radius: 999px;
+      background: var(--pink);
+      transform-origin: bottom;
+      animation: bars 1.2s ease-in-out infinite;
+      animation-play-state: paused;
+    }
+
+    .equalizer span:nth-child(2) {
+      height: 26px;
+      background: var(--blue);
+      animation-delay: .15s;
+    }
+
+    .equalizer span:nth-child(3) {
+      height: 20px;
+      background: var(--green);
+      animation-delay: .3s;
+    }
+
+    .is-playing .equalizer span {
+      animation-play-state: running;
+    }
+
+    .track-list {
+      margin-top: 24px;
+      padding: 18px;
+      border-radius: 26px;
+    }
+
+    .track-list h2 {
+      margin: 4px 8px 16px;
+      font-size: 22px;
+      letter-spacing: 0;
+    }
+
+    .tracks {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .track {
+      display: grid;
+      grid-template-columns: 42px minmax(0, 1fr);
+      gap: 12px;
+      align-items: center;
+      min-height: 74px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: rgba(255,255,255,.72);
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .track.active {
+      border-color: rgba(255, 124, 173, .58);
+      box-shadow: inset 0 0 0 2px rgba(255, 124, 173, .18);
+    }
+
+    .track-index {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      font-weight: 900;
+      background: linear-gradient(135deg, var(--pink), var(--blue));
+    }
+
+    .track-name {
+      margin: 0;
+      color: var(--text);
+      font-size: 16px;
+      font-weight: 800;
+      line-height: 1.35;
+      overflow-wrap: anywhere;
+    }
+
+    .track-note {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .hint {
+      margin: 16px 8px 2px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes bars {
+      0%, 100% { transform: scaleY(.45); }
+      50% { transform: scaleY(1); }
+    }
+
+    @keyframes slide {
+      to { background-position: 240% 0; }
+    }
+
+    @media (max-width: 760px) {
+      .shell {
+        width: min(100% - 20px, 1080px);
+        padding-top: 16px;
+      }
+
+      .top,
+      .player,
+      .tracks {
+        grid-template-columns: 1fr;
+      }
+
+      .intro {
+        padding: 24px;
+      }
+
+      h1 {
+        font-size: 32px;
+      }
+
+      .cover {
+        max-width: 340px;
+      }
+
+      .track-title {
+        font-size: 23px;
+      }
+
+      .volume {
+        width: 100%;
+        margin-left: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell" id="app">
+    <section class="top" aria-label="Music player introduction">
+      <div class="intro">
+        <p class="eyebrow">huoyal profile music</p>
+        <h1>Music Player</h1>
+        <p>这里播放仓库 assets 文件夹里的 MP3。推送到 GitHub 后，启用 GitHub Pages 就可以通过浏览器访问完整播放器。</p>
+      </div>
+      <img class="cover" src="./assets/music-player.svg" alt="Animated music player cover">
+    </section>
+
+    <section class="player" aria-label="Audio player">
+      <div class="disc-wrap" aria-hidden="true">
+        <div class="disc"></div>
+      </div>
+
+      <div class="meta">
+        <div class="now">
+          <span class="badge">Now Playing</span>
+          <div class="equalizer" aria-hidden="true">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </div>
+        <h2 class="track-title" id="trackTitle">Oturans - 【钢琴】千本樱</h2>
+        <p class="track-subtitle" id="trackSubtitle">Track 1 from assets</p>
+
+        <div class="progress">
+          <span id="currentTime">0:00</span>
+          <input id="seek" type="range" min="0" max="100" value="0" step="0.1" aria-label="播放进度">
+          <span id="duration">0:00</span>
+        </div>
+
+        <div class="controls">
+          <button class="icon-btn" id="prevBtn" type="button" title="上一首" aria-label="上一首">‹</button>
+          <button class="play-btn" id="playBtn" type="button" title="播放或暂停" aria-label="播放">▶</button>
+          <button class="icon-btn" id="nextBtn" type="button" title="下一首" aria-label="下一首">›</button>
+          <div class="volume">
+            <span>Volume</span>
+            <input id="volume" type="range" min="0" max="1" value="0.78" step="0.01" aria-label="音量">
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="track-list" aria-label="Track list">
+      <h2>Playlist</h2>
+      <div class="tracks" id="tracks"></div>
+      <p class="hint">如果在 GitHub README 中不能直接播放，请打开这个 GitHub Pages 播放器页面；README 会保留每首歌的直接播放链接。</p>
+    </section>
+  </main>
+
+  <audio id="audio" preload="metadata"></audio>
+
+  <script>
+    const tracks = [
+      {
+        title: "Oturans - 【钢琴】千本樱",
+        subtitle: "Piano cover from assets",
+        src: "./assets/Oturans%20-%20%E3%80%90%E9%92%A2%E7%90%B4%E3%80%91%E5%8D%83%E6%9C%AC%E6%A8%B1.mp3"
+      },
+      {
+        title: "天易 - 不败进行曲 DJ慢摇",
+        subtitle: "DJ slow remix from assets",
+        src: "./assets/%E5%A4%A9%E6%98%93%20-%20%E4%B8%8D%E8%B4%A5%E8%BF%9B%E8%A1%8C%E6%9B%B2%20DJ%E6%85%A2%E6%91%87.mp3"
+      }
+    ];
+
+    const app = document.getElementById("app");
+    const audio = document.getElementById("audio");
+    const playBtn = document.getElementById("playBtn");
+    const prevBtn = document.getElementById("prevBtn");
+    const nextBtn = document.getElementById("nextBtn");
+    const seek = document.getElementById("seek");
+    const volume = document.getElementById("volume");
+    const title = document.getElementById("trackTitle");
+    const subtitle = document.getElementById("trackSubtitle");
+    const currentTime = document.getElementById("currentTime");
+    const duration = document.getElementById("duration");
+    const trackContainer = document.getElementById("tracks");
+    let activeIndex = 0;
+    let seeking = false;
+
+    function formatTime(seconds) {
+      if (!Number.isFinite(seconds)) return "0:00";
+      const minutes = Math.floor(seconds / 60);
+      const rest = Math.floor(seconds % 60).toString().padStart(2, "0");
+      return `${minutes}:${rest}`;
+    }
+
+    function renderTracks() {
+      trackContainer.innerHTML = "";
+      tracks.forEach((track, index) => {
+        const button = document.createElement("button");
+        button.className = `track${index === activeIndex ? " active" : ""}`;
+        button.type = "button";
+        button.innerHTML = `
+          <span class="track-index">${index + 1}</span>
+          <span>
+            <span class="track-name">${track.title}</span>
+            <span class="track-note">${track.subtitle}</span>
+          </span>
+        `;
+        button.addEventListener("click", () => {
+          loadTrack(index, true);
+        });
+        trackContainer.appendChild(button);
+      });
+    }
+
+    function loadTrack(index, shouldPlay = false) {
+      activeIndex = (index + tracks.length) % tracks.length;
+      const track = tracks[activeIndex];
+      audio.src = track.src;
+      title.textContent = track.title;
+      subtitle.textContent = track.subtitle;
+      seek.value = 0;
+      currentTime.textContent = "0:00";
+      duration.textContent = "0:00";
+      renderTracks();
+      if (shouldPlay) {
+        audio.play().catch(() => {
+          app.classList.remove("is-playing");
+        });
+      }
+    }
+
+    function updatePlayState() {
+      const isPlaying = !audio.paused;
+      app.classList.toggle("is-playing", isPlaying);
+      playBtn.textContent = isPlaying ? "Ⅱ" : "▶";
+      playBtn.setAttribute("aria-label", isPlaying ? "暂停" : "播放");
+    }
+
+    playBtn.addEventListener("click", () => {
+      if (audio.paused) {
+        audio.play();
+      } else {
+        audio.pause();
+      }
+    });
+
+    prevBtn.addEventListener("click", () => loadTrack(activeIndex - 1, true));
+    nextBtn.addEventListener("click", () => loadTrack(activeIndex + 1, true));
+
+    audio.addEventListener("play", updatePlayState);
+    audio.addEventListener("pause", updatePlayState);
+    audio.addEventListener("ended", () => loadTrack(activeIndex + 1, true));
+
+    audio.addEventListener("loadedmetadata", () => {
+      duration.textContent = formatTime(audio.duration);
+    });
+
+    audio.addEventListener("timeupdate", () => {
+      if (!seeking && Number.isFinite(audio.duration)) {
+        seek.value = (audio.currentTime / audio.duration) * 100;
+      }
+      currentTime.textContent = formatTime(audio.currentTime);
+    });
+
+    seek.addEventListener("input", () => {
+      seeking = true;
+    });
+
+    seek.addEventListener("change", () => {
+      if (Number.isFinite(audio.duration)) {
+        audio.currentTime = (Number(seek.value) / 100) * audio.duration;
+      }
+      seeking = false;
+    });
+
+    volume.addEventListener("input", () => {
+      audio.volume = Number(volume.value);
+    });
+
+    audio.volume = Number(volume.value);
+    loadTrack(0);
+  </script>
+</body>
+</html>
